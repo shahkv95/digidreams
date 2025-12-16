@@ -4,35 +4,480 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio | Creative Developer</title>
-
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <!-- Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/ui.css">
-    <link rel="stylesheet" href="css/animations.css">
+        :root {
+            --c-bg: #E3EBE6;
+            --c-surface: #FDFCF8;
+            --c-text-main: #4A5552;
+            --c-text-light: #8A9995;
+            --c-sage: #9AB0A6;
+            --c-mint: #BCE3D6;
+            --c-blush: #E8D5D5;
+            --shadow-soft: 0 10px 40px -10px rgba(74, 85, 82, 0.15), 0 2px 10px -2px rgba(74, 85, 82, 0.05);
+            --shadow-elevated: 0 20px 50px -12px rgba(74, 85, 82, 0.25);
+            --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --glass-bg: rgba(253, 252, 248, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Dark Mode Overrides */
+        body.dark-mode {
+            --c-bg: #1A1F1D;
+            --c-surface: #2C3331;
+            --c-text-main: #E3EBE6;
+            --c-text-light: #8A9995;
+            --c-sage: #5C6B66;
+            --c-mint: #2D403A;
+            --c-blush: #4A3E4E;
+            --glass-bg: rgba(30, 35, 33, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.3), 0 2px 10px -2px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(to bottom, #E3EBE6, #D1DFD8);
+            color: var(--c-text-main);
+            overflow: hidden; /* Prevent scrolling, 3D scene handles view */
+            height: 100vh;
+            width: 100vw;
+            transition: background 1s ease, color 0.5s ease;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(to bottom, #1A1F1D, #121614);
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            transition: all 0.6s ease; /* Smooth blur/scale transition */
+        }
+
+        /* --- Focus Mode (When Modal is Open) --- */
+        body.modal-open #canvas-container {
+            filter: blur(8px) brightness(0.6);
+            transform: scale(0.98);
+        }
+
+        body.modal-open #ui-layer {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.98);
+        }
+
+        /* --- Spatial UI Layer --- */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to 3D where no UI exists */
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            grid-template-columns: 1fr auto 1fr;
+            padding: 2rem;
+            perspective: 1000px;
+            transition: opacity 0.5s ease, transform 0.6s ease;
+        }
+
+        /* Interactive Elements Enable Pointer Events */
+        .interactive {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* --- Header Card (Top Center) --- */
+        .hero-card {
+            grid-column: 2;
+            grid-row: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-soft);
+            width: 420px;
+            transform-style: preserve-3d;
+            animation: floatIn 1s var(--ease-elastic) forwards;
+            border: 1px solid var(--glass-border);
+            margin-top: 2vh;
+            transition: background 0.5s ease, border 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .brand-pill {
+            display: inline-block;
+            background: rgba(0,0,0,0.05);
+            color: var(--c-text-main);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode .brand-pill {
+            background: rgba(255,255,255,0.1);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            background: linear-gradient(45deg, #4A5552, #6B7C75);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.5s ease;
+        }
+
+        body.dark-mode h1 {
+            background: linear-gradient(45deg, #E3EBE6, #9AB0A6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 1rem;
+            color: var(--c-text-light);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+            transition: color 0.5s ease;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--c-text-main);
+            color: var(--c-surface);
+            padding: 0.8rem 1.6rem;
+            border-radius: 1rem;
+            border: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--c-text-main);
+            border: 1px solid rgba(120, 120, 120, 0.2);
+            padding: 0.8rem 1.6rem;
+            border-radius: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(120, 120, 120, 0.05);
+        }
+
+        /* --- Floating Widgets (Sides) --- */
+        .widget-area-left {
+            grid-column: 1;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 1.5rem;
+            padding-left: 2rem;
+        }
+
+        .widget-area-right {
+            grid-column: 3;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 1.5rem;
+            padding-right: 2rem;
+        }
+
+        .control-pill {
+            background: var(--glass-bg);
+            padding: 0.8rem;
+            border-radius: 1.5rem; /* Circle/Pill shape */
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--c-text-main);
+            transition: all 0.3s ease;
+            width: 3.5rem;
+            height: 3.5rem;
+            position: relative;
+            z-index: 20;
+        }
+
+        .control-pill:hover {
+            transform: scale(1.1);
+            color: var(--c-sage);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .slider-container {
+            background: var(--glass-bg);
+            padding: 1.5rem 0.8rem;
+            border-radius: 2rem;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            transition: background 0.5s ease, box-shadow 0.5s ease;
+            position: relative;
+            z-index: 20;
+        }
+
+        .slider-track {
+            width: 4px;
+            height: 100px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        body.dark-mode .slider-track {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .slider-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--c-sage);
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 50%; /* Start middle */
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: ns-resize;
+        }
+
+        /* --- Bottom Dashboard --- */
+        .dashboard-bar {
+            grid-column: 1 / -1;
+            grid-row: 3;
+            justify-self: center;
+            margin-bottom: 2rem;
+            
+            background: rgba(30, 35, 33, 0.7); /* Darker translucent */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.8s 0.3s var(--ease-elastic) forwards;
+        }
+        
+        body.dark-mode .dashboard-bar {
+            background: rgba(10, 15, 12, 0.8);
+        }
+
+        .dash-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .dash-item:hover {
+            opacity: 1;
+        }
+
+        .dash-sep {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* --- Animations --- */
+        @keyframes floatIn {
+            0% { opacity: 0; transform: translateY(-30px) rotateX(5deg); }
+            100% { opacity: 1; transform: translateY(0) rotateX(0); }
+        }
+
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #ui-layer {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            .hero-card {
+                grid-column: 1;
+                width: 100%;
+                padding: 1.5rem;
+            }
+            .widget-area-left, .widget-area-right {
+                display: none; /* Simplify for mobile */
+            }
+            .dashboard-bar {
+                width: 90%;
+                gap: 1rem;
+                justify-content: space-between;
+            }
+        }
+
+        /* Loading Overlay */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--c-bg);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            color: var(--c-sage);
+            letter-spacing: 2px;
+            transition: opacity 0.8s ease, background 1s ease;
+        }
+        body.dark-mode #loader {
+            background: #1A1F1D;
+            color: #E3EBE6;
+        }
+
+        /* --- Warp / Transition Overlay --- */
+        #warp-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        
+        body.warping #warp-overlay {
+            opacity: 1;
+        }
+
+        /* --- About Modal --- */
+        #about-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%;
+            max-width: 500px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: var(--shadow-elevated);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s var(--ease-elastic);
+            border: 1px solid var(--glass-border);
+        }
+
+        #about-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #about-modal h2 {
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            color: var(--c-text-main);
+        }
+
+        #about-modal p {
+            line-height: 1.6;
+            color: var(--c-text-light);
+            margin-bottom: 2rem;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--c-text-main);
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .close-modal:hover { opacity: 1; }
+
+    </style>
 </head>
-
 <body>
 
     <!-- Loading Screen -->
     <div id="loader">LOADING PORTFOLIO...</div>
 
-    <!-- Background Music -->
+    <!-- Background Music (Soft Ambient) -->
+    <!-- Replaced with reliable Wikimedia link -->
     <audio id="bg-music" loop>
         <source src="assets/audio/calm-soft-401915.mp3" type="audio/mpeg">
     </audio>
 
-
-    <!-- Warp Overlay -->
+    <!-- Warp Overlay for Transition -->
     <div id="warp-overlay"></div>
 
-    <!-- 3D Canvas -->
+    <!-- 3D Container -->
     <div id="canvas-container"></div>
 
     <!-- About Modal -->
@@ -41,29 +486,20 @@
             <i data-lucide="x" size="24"></i>
         </button>
         <h2>About Me</h2>
-        <p>
-            I am a creative technologist passionate about bridging the gap between
-            design and engineering. With a background in computational design and
-            full-stack development, I build immersive web experiences that tell stories.
-        </p>
-        <div class="cta-group" style="justify-content:flex-start">
-            <button class="btn-primary" onclick="window.location.href='mailto:hello@example.com'">
-                Get in Touch
-            </button>
+        <p>I am a creative technologist passionate about bridging the gap between design and engineering. With a background in computational design and full-stack development, I build immersive web experiences that tell stories.</p>
+        <div class="cta-group" style="justify-content: flex-start;">
+            <button class="btn-primary" onclick="window.location.href='mailto:hello@example.com'">Get in Touch</button>
         </div>
     </div>
 
-    <!-- Spatial UI -->
+    <!-- Spatial UI Overlay -->
     <div id="ui-layer">
-
-        <!-- Hero Card -->
+        
+        <!-- Center Top Card -->
         <article class="hero-card interactive">
             <span class="brand-pill">PORTFOLIO 2025</span>
             <h1>Building<br>Digital Dreams</h1>
-            <p class="subtitle">
-                Creative technologist specializing in 3D web experiences,
-                minimalist UI, and interactive storytelling.
-            </p>
+            <p class="subtitle">Creative technologist specializing in 3D web experiences, minimalist UI, and interactive storytelling.</p>
             <div class="cta-group">
                 <button class="btn-primary" id="btn-projects">View Projects</button>
                 <button class="btn-secondary" id="btn-about">About Me</button>
@@ -72,10 +508,10 @@
 
         <!-- Left Controls -->
         <aside class="widget-area-left">
-            <div class="control-pill interactive" id="theme-toggle">
+            <div class="control-pill interactive" id="theme-toggle" title="Toggle Day/Night">
                 <i data-lucide="sun" size="20"></i>
             </div>
-            <div class="control-pill interactive" id="music-toggle">
+            <div class="control-pill interactive" id="music-toggle" title="Soundscape">
                 <i data-lucide="music" size="20"></i>
             </div>
         </aside>
@@ -83,38 +519,40 @@
         <!-- Right Controls -->
         <aside class="widget-area-right">
             <div class="slider-container interactive" id="zoom-control">
-                <i data-lucide="zoom-in" size="16" id="zoom-in-btn"></i>
+                <i data-lucide="zoom-in" size="16" style="opacity: 0.5; cursor: pointer;" id="zoom-in-btn"></i>
                 <div class="slider-track" id="slider-track">
                     <div class="slider-thumb" id="slider-thumb"></div>
                 </div>
-                <i data-lucide="zoom-out" size="16" id="zoom-out-btn"></i>
+                <i data-lucide="zoom-out" size="16" style="opacity: 0.5; cursor: pointer;" id="zoom-out-btn"></i>
             </div>
-            <div class="control-pill interactive" id="layers-toggle">
+            <div class="control-pill interactive" id="layers-toggle" title="View Options">
                 <i data-lucide="layers" size="20"></i>
             </div>
         </aside>
 
-        <!-- Bottom Dashboard -->
+        <!-- Bottom Dashboard (Socials & Nav) -->
         <footer class="dashboard-bar interactive">
-            <a href="https://github.com" target="_blank" class="dash-item">
+            <!-- Social Links -->
+            <a href="https://github.com" target="_blank" class="dash-item" title="GitHub">
                 <i data-lucide="github" size="20"></i>
                 <span>GitHub</span>
             </a>
-
-            <a href="https://linkedin.com" target="_blank" class="dash-item">
+            
+            <a href="https://linkedin.com" target="_blank" class="dash-item" title="LinkedIn">
                 <i data-lucide="linkedin" size="20"></i>
                 <span>LinkedIn</span>
             </a>
 
             <div class="dash-sep"></div>
 
-            <div class="dash-item" style="opacity:1;color:white">
+            <!-- Portfolio Nav -->
+            <div class="dash-item" style="opacity: 1; color: white;">
                 <i data-lucide="folder-open" size="20"></i>
                 <span>Work</span>
             </div>
-
+            
             <div class="dash-sep"></div>
-
+            
             <a href="mailto:hello@example.com" class="dash-item">
                 <i data-lucide="mail" size="20"></i>
                 <span>Contact</span>
@@ -123,31 +561,589 @@
 
     </div>
 
-    <!-- Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-    <!-- App Scripts (classic, GitHub Pages safe) -->
-    <script src="js/config.js"></script>
-
-    <script src="js/scene/initScene.js"></script>
-    <script src="js/scene/lights.js"></script>
-    <script src="js/scene/materials.js"></script>
-    <script src="js/scene/world.js"></script>
-
-    <script src="js/effects/particles.js"></script>
-
-    <script src="js/ui/themeToggle.js"></script>
-    <script src="js/ui/music.js"></script>
-    <script src="js/ui/modal.js"></script>
-    <script src="js/ui/zoom.js"></script>
-    <script src="js/ui/layers.js"></script>
-
-    <script src="js/interactions.js"></script>
-    <script src="js/main.js"></script>
-
     <script>
+        // Initialize Lucide Icons
         lucide.createIcons();
-    </script>
 
+        // --- THREE.JS SCENE SETUP ---
+        const container = document.getElementById('canvas-container');
+        
+        // Scene & Camera
+        const scene = new THREE.Scene();
+        // Fog for depth: Sage/Mint tint
+        scene.fog = new THREE.FogExp2(0xE3EBE6, 0.012); 
+        scene.background = new THREE.Color(0xE3EBE6);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0, 30, 80); // Start at standard Zoom
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Performance optimization
+        container.appendChild(renderer.domElement);
+
+        // --- LIGHTING ---
+        // Soft, diffused setup
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
+        scene.add(hemiLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(-50, 80, 50);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 500;
+        dirLight.shadow.camera.left = -100;
+        dirLight.shadow.camera.right = 100;
+        dirLight.shadow.camera.top = 100;
+        dirLight.shadow.camera.bottom = -100;
+        dirLight.shadow.bias = -0.0005;
+        scene.add(dirLight);
+
+        // Soft blush accent light from opposite side
+        const spotLight = new THREE.SpotLight(0xE8D5D5, 0.8);
+        spotLight.position.set(50, 40, -50);
+        spotLight.lookAt(0, 0, 0);
+        scene.add(spotLight);
+
+        // --- MATERIALS ---
+        // Matte, clay-like finishes
+        const matTerrain = new THREE.MeshStandardMaterial({ 
+            color: 0xDCE8E2, 
+            roughness: 0.9, 
+            flatShading: true 
+        });
+        
+        const matMountain = new THREE.MeshStandardMaterial({ 
+            color: 0xC8D6D0, 
+            roughness: 1.0, 
+            flatShading: true 
+        });
+
+        const matSnow = new THREE.MeshStandardMaterial({
+            color: 0xFFFFFF,
+            roughness: 0.5
+        });
+
+        const matTree = new THREE.MeshStandardMaterial({ 
+            color: 0x5D7066, 
+            roughness: 0.9 
+        });
+
+        const matBuildingWhite = new THREE.MeshStandardMaterial({ 
+            color: 0xFDFCF8, 
+            roughness: 0.3,
+            metalness: 0.1 
+        });
+
+        const matGlass = new THREE.MeshPhysicalMaterial({
+            color: 0x8DA399,
+            metalness: 0,
+            roughness: 0,
+            transparent: true,
+            opacity: 0.5,
+            transmission: 0.9
+        });
+
+        // --- GEOMETRY GENERATION ---
+
+        // 1. Terrain Base
+        const terrainGeo = new THREE.CylinderGeometry(60, 55, 10, 64);
+        const terrain = new THREE.Mesh(terrainGeo, matTerrain);
+        terrain.position.y = -5;
+        terrain.receiveShadow = true;
+        scene.add(terrain);
+
+        // 2. Mountains (Procedural Cones)
+        const mtGroup = new THREE.Group();
+        
+        function createMountain(x, z, h, r, colorOverride) {
+            const geo = new THREE.ConeGeometry(r, h, 7, 1); // Low poly
+            // Jitter vertices for natural look
+            const pos = geo.attributes.position;
+            for(let i=0; i<pos.count; i++) {
+                const y = pos.getY(i);
+                if (y < h/2 - 1) { // Don't jitter tip too much
+                    pos.setX(i, pos.getX(i) + (Math.random() - 0.5) * 3);
+                    pos.setZ(i, pos.getZ(i) + (Math.random() - 0.5) * 3);
+                }
+            }
+            geo.computeVertexNormals();
+            
+            const mesh = new THREE.Mesh(geo, matMountain);
+            mesh.position.set(x, h/2 - 5, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            
+            // Snow cap
+            const capGeo = new THREE.ConeGeometry(r * 0.35, h * 0.35, 7, 1);
+            const cap = new THREE.Mesh(capGeo, matSnow);
+            cap.position.y = h/2 - (h*0.35)/2;
+            mesh.add(cap);
+            
+            mtGroup.add(mesh);
+        }
+
+        // Backdrops
+        createMountain(-25, -20, 45, 20);
+        createMountain(0, -35, 60, 25);
+        createMountain(30, -25, 40, 18);
+        scene.add(mtGroup);
+
+        // 3. Trees (Instanced for efficiency logic, but simple clones here for ease)
+        const treeGroup = new THREE.Group();
+        const treeGeo = new THREE.ConeGeometry(2, 6, 5);
+        
+        function addTree(x, z, scale) {
+            const mesh = new THREE.Mesh(treeGeo, matTree);
+            mesh.position.set(x, scale*3 - 5, z);
+            mesh.scale.set(scale, scale, scale);
+            mesh.castShadow = true;
+            treeGroup.add(mesh);
+        }
+
+        // Scatter trees
+        for (let i = 0; i < 40; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const rad = 25 + Math.random() * 25; // Outer ring
+            const x = Math.cos(angle) * rad;
+            const z = Math.sin(angle) * rad;
+            // Keep away from front center (architecture spot)
+            if (z > 10 && Math.abs(x) < 20) continue; 
+            
+            addTree(x, z, 0.8 + Math.random() * 0.5);
+        }
+        scene.add(treeGroup);
+
+        // 4. Architecture (Domes, Arches, Van)
+        const archGroup = new THREE.Group();
+
+        // Main Dome Cabin
+        const domeGeo = new THREE.SphereGeometry(6, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const dome = new THREE.Mesh(domeGeo, matBuildingWhite);
+        dome.position.set(10, 0, 10);
+        dome.castShadow = true;
+        dome.receiveShadow = true;
+        archGroup.add(dome);
+
+        // Entrance arch
+        const entrance = new THREE.Mesh(new THREE.BoxGeometry(3, 4, 2), matBuildingWhite);
+        entrance.position.set(10, 2, 15);
+        archGroup.add(entrance);
+
+        // Secondary Cylindrical Cabin
+        const cylGeo = new THREE.CylinderGeometry(3, 3, 7, 32);
+        const cyl = new THREE.Mesh(cylGeo, matBuildingWhite);
+        cyl.position.set(-8, 3.5, 5);
+        cyl.castShadow = true;
+        archGroup.add(cyl);
+        
+        // Window for cylinder (to show emissive glow in dark mode)
+        const cylWinGeo = new THREE.CylinderGeometry(3.1, 3.1, 2, 32, 1, true, 0, 1);
+        const cylWin = new THREE.Mesh(cylWinGeo, matGlass);
+        cylWin.position.set(0, 1, 0);
+        cylWin.rotation.y = 1;
+        cyl.add(cylWin);
+
+        // Dome Window (curved shape on surface)
+        const domeWinGeo = new THREE.SphereGeometry(6.05, 32, 16, 0, 1, 0, 1.5);
+        const domeWin = new THREE.Mesh(domeWinGeo, matGlass);
+        domeWin.position.set(0,0,0);
+        domeWin.rotation.y = 0.5;
+        dome.add(domeWin);
+
+        // Connecting path (flat)
+        const pathGeo = new THREE.CylinderGeometry(15, 15, 0.2, 32);
+        const path = new THREE.Mesh(pathGeo, new THREE.MeshStandardMaterial({color: 0xE8F0ED}));
+        path.position.set(0, 0.1, 8);
+        path.receiveShadow = true;
+        archGroup.add(path);
+
+        // Camper Van
+        const vanGroup = new THREE.Group();
+        const vanBody = new THREE.Mesh(new THREE.BoxGeometry(5, 3.5, 8), matBuildingWhite);
+        vanBody.position.y = 2.5;
+        vanBody.castShadow = true;
+        
+        // Wheels
+        const wheelGeo = new THREE.CylinderGeometry(1, 1, 0.5, 16);
+        const wheelMat = new THREE.MeshStandardMaterial({color: 0x4A5552});
+        const w1 = new THREE.Mesh(wheelGeo, wheelMat); w1.rotation.z = Math.PI/2; w1.position.set(2.5, 1, 2);
+        const w2 = w1.clone(); w2.position.set(-2.5, 1, 2);
+        const w3 = w1.clone(); w3.position.set(2.5, 1, -2);
+        const w4 = w1.clone(); w4.position.set(-2.5, 1, -2);
+        
+        vanGroup.add(vanBody, w1, w2, w3, w4);
+        vanGroup.position.set(-15, 0, 20);
+        vanGroup.rotation.y = 0.5;
+        archGroup.add(vanGroup);
+
+        scene.add(archGroup);
+
+        // 5. Floating Spheres (Abstract Background)
+        const spheresGroup = new THREE.Group();
+        const sphereGeo = new THREE.SphereGeometry(1, 16, 16);
+        const sphereMat = new THREE.MeshStandardMaterial({ color: 0xBCE3D6, transparent: true, opacity: 0.8 });
+        
+        for(let i=0; i<15; i++) {
+            const mesh = new THREE.Mesh(sphereGeo, sphereMat);
+            const scale = Math.random() * 3 + 1;
+            mesh.scale.set(scale, scale, scale);
+            mesh.position.set(
+                (Math.random() - 0.5) * 100,
+                15 + Math.random() * 30,
+                -20 + (Math.random() - 0.5) * 60
+            );
+            spheresGroup.add(mesh);
+        }
+        scene.add(spheresGroup);
+
+        // 6. Particle Tunnel (Hidden initially)
+        const particlesCount = 2000;
+        const posArray = new Float32Array(particlesCount * 3);
+        
+        for(let i = 0; i < particlesCount * 3; i+=3) {
+            // Tunnel shape: Random angle, random radius > X, random depth
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 20 + Math.random() * 50; 
+            const z = -200 + Math.random() * 400; // Long tunnel
+
+            posArray[i] = Math.cos(angle) * radius;   // x
+            posArray[i+1] = Math.sin(angle) * radius; // y
+            posArray[i+2] = z;                        // z
+        }
+        
+        const particlesGeo = new THREE.BufferGeometry();
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMat = new THREE.PointsMaterial({
+            size: 0.4,
+            color: 0x00ffff, // Cyan/Mint glow
+            transparent: true,
+            opacity: 0
+        });
+        
+        const particleTunnel = new THREE.Points(particlesGeo, particlesMat);
+        scene.add(particleTunnel);
+
+
+        // --- ANIMATION LOOP ---
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetRotationX = 0;
+        let targetRotationY = 0;
+        let isWarping = false; // Flag for warp animation
+
+        // Interaction Listeners
+        document.addEventListener('mousemove', (event) => {
+            if(!isWarping) {
+                mouseX = (event.clientX - window.innerWidth / 2) * 0.0005;
+                mouseY = (event.clientY - window.innerHeight / 2) * 0.0005;
+            }
+        });
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Dark Mode Logic
+        let isDarkMode = false;
+        const toggleBtn = document.getElementById('theme-toggle');
+        
+        toggleBtn.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            
+            // Switch Icon logic fixed
+            const iconName = isDarkMode ? 'moon' : 'sun';
+            toggleBtn.innerHTML = `<i data-lucide="${iconName}" size="20"></i>`;
+            lucide.createIcons();
+
+            update3DTheme(isDarkMode);
+        });
+
+        // --- MUSIC CONTROL ---
+        const musicBtn = document.getElementById('music-toggle');
+        const bgMusic = document.getElementById('bg-music');
+        // Removed the unreliable tracking variable isPlaying
+        bgMusic.volume = 0.2; // Set low volume initially
+
+        let isToggling = false;
+
+        musicBtn.addEventListener('click', async () => {
+            if (isToggling) return; // Prevent rapid clicking issues
+            isToggling = true;
+
+            try {
+                if (bgMusic.paused) {
+                    await bgMusic.play();
+                    musicBtn.innerHTML = '<i data-lucide="volume-2" size="20"></i>';
+                } else {
+                    bgMusic.pause();
+                    musicBtn.innerHTML = '<i data-lucide="music" size="20"></i>';
+                }
+                lucide.createIcons();
+            } catch (err) {
+                console.error("Audio toggle error:", err);
+            } finally {
+                isToggling = false;
+            }
+        });
+
+        // --- NEW: SLIDER ZOOM & LAYERS LOGIC ---
+
+        // 1. Zoom Slider
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const sliderTrack = document.getElementById('slider-track');
+        const sliderThumb = document.getElementById('slider-thumb');
+        
+        const MIN_ZOOM = 40;  // Close
+        const MAX_ZOOM = 120; // Far
+        
+        function updateZoomUI() {
+            // Map camera Z (40-120) to slider % (0-100)
+            // 40 -> 0%, 120 -> 100%
+            const pct = (camera.position.z - MIN_ZOOM) / (MAX_ZOOM - MIN_ZOOM) * 100;
+            sliderThumb.style.top = `${pct}%`;
+        }
+
+        // Initialize UI position
+        updateZoomUI();
+
+        // Icon Clicks
+        zoomInBtn.addEventListener('click', () => {
+            camera.position.z = Math.max(MIN_ZOOM, camera.position.z - 15);
+            updateZoomUI();
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            camera.position.z = Math.min(MAX_ZOOM, camera.position.z + 15);
+            updateZoomUI();
+        });
+
+        // Drag Logic for Slider
+        let isDraggingSlider = false;
+        
+        sliderThumb.addEventListener('mousedown', (e) => {
+            isDraggingSlider = true;
+            e.stopPropagation(); // Stop bubbling
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDraggingSlider = false;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDraggingSlider) return;
+            
+            const rect = sliderTrack.getBoundingClientRect();
+            // Calculate relative Y (0 to 1)
+            let val = (e.clientY - rect.top) / rect.height;
+            val = Math.max(0, Math.min(1, val));
+            
+            // Map to Z range
+            camera.position.z = MIN_ZOOM + val * (MAX_ZOOM - MIN_ZOOM);
+            updateZoomUI();
+        });
+
+
+        // 2. Layers Toggle (Wireframe Mode)
+        const layersBtn = document.getElementById('layers-toggle');
+        let isWireframe = false;
+
+        layersBtn.addEventListener('click', () => {
+            isWireframe = !isWireframe;
+            
+            scene.traverse((child) => {
+                if (child.isMesh) {
+                    // Store original material if not stored
+                    if (!child.userData.origMat) child.userData.origMat = child.material;
+                    
+                    if (isWireframe) {
+                        // Apply Tech Wireframe Material
+                        const wireMat = new THREE.MeshBasicMaterial({
+                            color: isDarkMode ? 0x00ffff : 0x4A5552, 
+                            wireframe: true,
+                            transparent: true, 
+                            opacity: 0.3
+                        });
+                        child.material = wireMat;
+                    } else {
+                        // Restore Original
+                        child.material = child.userData.origMat;
+                    }
+                }
+            });
+            
+            // Toggle Icon Color to indicate active state
+            layersBtn.style.color = isWireframe ? (isDarkMode ? '#00ffff' : '#4A5552') : '';
+            layersBtn.style.borderColor = isWireframe ? (isDarkMode ? '#00ffff' : '#4A5552') : '';
+        });
+
+
+        function update3DTheme(isDark) {
+            if (isDark) {
+                // DARK THEME
+                const bg = new THREE.Color(0x1A1F1D);
+                scene.background = bg;
+                scene.fog.color = bg;
+
+                // Moonlight ambience
+                hemiLight.color.setHex(0x2c3e50);
+                hemiLight.groundColor.setHex(0x000000);
+                hemiLight.intensity = 0.4;
+
+                // Cool directional moonlight
+                dirLight.color.setHex(0xAACCFF);
+                dirLight.intensity = 0.4;
+                dirLight.position.set(50, 80, -50);
+
+                // Deep dramatic purple accent
+                spotLight.color.setHex(0x9966CC);
+                spotLight.intensity = 2.0;
+
+                // Windows glow
+                matGlass.emissive.setHex(0xFFE4B5);
+                matGlass.emissiveIntensity = 0.5;
+                matGlass.opacity = 0.8;
+
+                // Particles
+                particlesMat.color.setHex(0x00ffff);
+
+            } else {
+                // LIGHT THEME (Reset)
+                const bg = new THREE.Color(0xE3EBE6);
+                scene.background = bg;
+                scene.fog.color = bg;
+
+                hemiLight.color.setHex(0xffffff);
+                hemiLight.groundColor.setHex(0xffffff);
+                hemiLight.intensity = 0.6;
+
+                dirLight.color.setHex(0xffffff);
+                dirLight.intensity = 0.8;
+                dirLight.position.set(-50, 80, 50);
+
+                spotLight.color.setHex(0xE8D5D5);
+                spotLight.intensity = 0.8;
+
+                matGlass.emissive.setHex(0x000000);
+                matGlass.emissiveIntensity = 0;
+                matGlass.opacity = 0.5;
+
+                // Particles darker in day
+                particlesMat.color.setHex(0x4A5552);
+            }
+        }
+
+        // --- NEW BUTTON LOGIC ---
+        
+        // 1. View Projects (Particle Tunnel Effect)
+        document.getElementById('btn-projects').addEventListener('click', () => {
+            isWarping = true;
+            document.body.classList.add('warping');
+            document.getElementById('ui-layer').style.opacity = '0';
+            document.getElementById('ui-layer').style.transform = 'scale(1.1)';
+            
+            // Activate Particles
+            particlesMat.opacity = 1;
+
+            const startTime = Date.now();
+            const startFOV = camera.fov;
+
+            function warpLoop() {
+                const elapsed = (Date.now() - startTime) / 1000;
+                
+                if (elapsed < 1.2) {
+                    // 1. Move Particles towards camera to simulate speed
+                    const positions = particlesGeo.attributes.position.array;
+                    for(let i=2; i<positions.length; i+=3) {
+                        positions[i] += 10 + (elapsed * 50); // Accelerate
+                        if(positions[i] > 100) positions[i] = -200; // Reset loop
+                    }
+                    particlesGeo.attributes.position.needsUpdate = true;
+
+                    // 2. FOV stretch
+                    camera.fov = THREE.MathUtils.lerp(startFOV, 110, elapsed);
+                    camera.updateProjectionMatrix();
+
+                    // 3. Shake camera slightly
+                    camera.position.x = (Math.random() - 0.5) * 0.5;
+                    camera.position.y = 30 + (Math.random() - 0.5) * 0.5;
+
+                    requestAnimationFrame(warpLoop);
+                } else {
+                    window.location.href = 'https://shahkv95.github.io/dynamics/';
+                }
+            }
+            warpLoop();
+        });
+
+        // 2. About Modal Logic (Focus Mode)
+        const aboutModal = document.getElementById('about-modal');
+        const btnAbout = document.getElementById('btn-about');
+        const closeAbout = document.querySelector('.close-modal');
+
+        btnAbout.addEventListener('click', () => {
+            aboutModal.classList.add('active');
+            document.body.classList.add('modal-open');
+        });
+
+        closeAbout.addEventListener('click', () => {
+            aboutModal.classList.remove('active');
+            document.body.classList.remove('modal-open');
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'about-modal' || (!aboutModal.contains(e.target) && !btnAbout.contains(e.target) && aboutModal.classList.contains('active'))) {
+                aboutModal.classList.remove('active');
+                document.body.classList.remove('modal-open');
+            }
+        });
+
+
+        // Clock for gentle animations
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            if (!isWarping) {
+                // 1. Gentle Rotation of entire scene based on mouse (Parallax)
+                targetRotationX = mouseX * 0.5;
+                targetRotationY = mouseY * 0.2;
+                
+                // Smooth damping
+                scene.rotation.y += 0.05 * (targetRotationX - scene.rotation.y);
+                scene.rotation.x += 0.05 * (targetRotationY - scene.rotation.x);
+
+                // 2. Floating elements animation
+                spheresGroup.children.forEach((sphere, i) => {
+                    sphere.position.y += Math.sin(time * 0.5 + i) * 0.02;
+                });
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Hide loader when assets "ready" (simulated)
+        setTimeout(() => {
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+            }, 800);
+            animate();
+        }, 1500);
+
+    </script>
 </body>
 </html>
