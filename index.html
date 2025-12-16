@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio | Creative Developer</title>
 
     <!-- Fonts -->
@@ -31,7 +31,7 @@
     <!-- Warp Overlay -->
     <div id="warp-overlay"></div>
 
-    <!-- Three.js Canvas -->
+    <!-- 3D Canvas -->
     <div id="canvas-container"></div>
 
     <!-- About Modal -->
@@ -41,18 +41,18 @@
         </button>
         <h2>About Me</h2>
         <p>
-            I am a creative technologist passionate about bridging the gap between design and engineering.
-            With a background in computational design and full-stack development, I build immersive web
-            experiences that tell stories.
+            I am a creative technologist passionate about bridging the gap between
+            design and engineering. With a background in computational design and
+            full-stack development, I build immersive web experiences that tell stories.
         </p>
-        <div class="cta-group" style="justify-content: flex-start;">
+        <div class="cta-group" style="justify-content:flex-start">
             <button class="btn-primary" onclick="window.location.href='mailto:hello@example.com'">
                 Get in Touch
             </button>
         </div>
     </div>
 
-    <!-- Spatial UI Layer -->
+    <!-- Spatial UI -->
     <div id="ui-layer">
 
         <!-- Hero Card -->
@@ -71,36 +71,36 @@
 
         <!-- Left Controls -->
         <aside class="widget-area-left">
-            <div class="control-pill interactive" id="theme-toggle" title="Toggle Day/Night">
+            <div class="control-pill interactive" id="theme-toggle">
                 <i data-lucide="sun" size="20"></i>
             </div>
-            <div class="control-pill interactive" id="music-toggle" title="Soundscape">
+            <div class="control-pill interactive" id="music-toggle">
                 <i data-lucide="music" size="20"></i>
             </div>
         </aside>
 
         <!-- Right Controls -->
         <aside class="widget-area-right">
-            <div class="slider-container interactive">
-                <i data-lucide="zoom-in" size="16" style="opacity:0.5"></i>
-                <div class="slider-track">
-                    <div class="slider-thumb"></div>
+            <div class="slider-container interactive" id="zoom-control">
+                <i data-lucide="zoom-in" size="16" id="zoom-in-btn"></i>
+                <div class="slider-track" id="slider-track">
+                    <div class="slider-thumb" id="slider-thumb"></div>
                 </div>
-                <i data-lucide="zoom-out" size="16" style="opacity:0.5"></i>
+                <i data-lucide="zoom-out" size="16" id="zoom-out-btn"></i>
             </div>
-            <div class="control-pill interactive" title="View Options">
+            <div class="control-pill interactive" id="layers-toggle">
                 <i data-lucide="layers" size="20"></i>
             </div>
         </aside>
 
         <!-- Bottom Dashboard -->
         <footer class="dashboard-bar interactive">
-            <a href="https://github.com/shahkv95" target="_blank" class="dash-item">
+            <a href="https://github.com" target="_blank" class="dash-item">
                 <i data-lucide="github" size="20"></i>
                 <span>GitHub</span>
             </a>
 
-            <a href="https://www.linkedin.com/in/kushkush/" target="_blank" class="dash-item">
+            <a href="https://linkedin.com" target="_blank" class="dash-item">
                 <i data-lucide="linkedin" size="20"></i>
                 <span>LinkedIn</span>
             </a>
@@ -125,7 +125,7 @@
     <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <!-- App Scripts (CLASSIC, ORDERED) -->
+    <!-- App Scripts (classic, GitHub Pages safe) -->
     <script src="js/config.js"></script>
 
     <script src="js/scene/initScene.js"></script>
@@ -138,7 +138,8 @@
     <script src="js/ui/themeToggle.js"></script>
     <script src="js/ui/music.js"></script>
     <script src="js/ui/modal.js"></script>
-    <script src="js/ui/dashboard.js"></script>
+    <script src="js/ui/zoom.js"></script>
+    <script src="js/ui/layers.js"></script>
 
     <script src="js/interactions.js"></script>
     <script src="js/main.js"></script>
