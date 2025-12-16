@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio | Creative Developer</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/ui.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loader">LOADING PORTFOLIO...</div>
+
+    <!-- Background Music -->
+    <audio id="bg-music" loop>
+        <source src="https://upload.wikimedia.org/wikipedia/commons/transcoded/e/eb/Gymnopedie_No_1.ogg/Gymnopedie_No_1.ogg.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Warp Overlay -->
+    <div id="warp-overlay"></div>
+
+    <!-- Three.js Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- About Modal -->
+    <div id="about-modal">
+        <button class="close-modal interactive">
+            <i data-lucide="x" size="24"></i>
+        </button>
+        <h2>About Me</h2>
+        <p>
+            I am a creative technologist passionate about bridging the gap between design and engineering.
+            With a background in computational design and full-stack development, I build immersive web
+            experiences that tell stories.
+        </p>
+        <div class="cta-group" style="justify-content: flex-start;">
+            <button class="btn-primary" onclick="window.location.href='mailto:hello@example.com'">
+                Get in Touch
+            </button>
+        </div>
+    </div>
+
+    <!-- Spatial UI Layer -->
+    <div id="ui-layer">
+
+        <!-- Hero Card -->
+        <article class="hero-card interactive">
+            <span class="brand-pill">PORTFOLIO 2025</span>
+            <h1>Building<br>Digital Dreams</h1>
+            <p class="subtitle">
+                Creative technologist specializing in 3D web experiences,
+                minimalist UI, and interactive storytelling.
+            </p>
+            <div class="cta-group">
+                <button class="btn-primary" id="btn-projects">View Projects</button>
+                <button class="btn-secondary" id="btn-about">About Me</button>
+            </div>
+        </article>
+
+        <!-- Left Controls -->
+        <aside class="widget-area-left">
+            <div class="control-pill interactive" id="theme-toggle" title="Toggle Day/Night">
+                <i data-lucide="sun" size="20"></i>
+            </div>
+            <div class="control-pill interactive" id="music-toggle" title="Soundscape">
+                <i data-lucide="music" size="20"></i>
+            </div>
+        </aside>
+
+        <!-- Right Controls -->
+        <aside class="widget-area-right">
+            <div class="slider-container interactive">
+                <i data-lucide="zoom-in" size="16" style="opacity:0.5"></i>
+                <div class="slider-track">
+                    <div class="slider-thumb"></div>
+                </div>
+                <i data-lucide="zoom-out" size="16" style="opacity:0.5"></i>
+            </div>
+            <div class="control-pill interactive" title="View Options">
+                <i data-lucide="layers" size="20"></i>
+            </div>
+        </aside>
+
+        <!-- Bottom Dashboard -->
+        <footer class="dashboard-bar interactive">
+            <a href="https://github.com/shahkv95" target="_blank" class="dash-item">
+                <i data-lucide="github" size="20"></i>
+                <span>GitHub</span>
+            </a>
+
+            <a href="https://www.linkedin.com/in/kushkush/" target="_blank" class="dash-item">
+                <i data-lucide="linkedin" size="20"></i>
+                <span>LinkedIn</span>
+            </a>
+
+            <div class="dash-sep"></div>
+
+            <div class="dash-item" style="opacity:1;color:white">
+                <i data-lucide="folder-open" size="20"></i>
+                <span>Work</span>
+            </div>
+
+            <div class="dash-sep"></div>
+
+            <a href="mailto:hello@example.com" class="dash-item">
+                <i data-lucide="mail" size="20"></i>
+                <span>Contact</span>
+            </a>
+        </footer>
+
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- App Scripts (CLASSIC, ORDERED) -->
+    <script src="js/config.js"></script>
+
+    <script src="js/scene/initScene.js"></script>
+    <script src="js/scene/lights.js"></script>
+    <script src="js/scene/materials.js"></script>
+    <script src="js/scene/world.js"></script>
+
+    <script src="js/effects/particles.js"></script>
+
+    <script src="js/ui/themeToggle.js"></script>
+    <script src="js/ui/music.js"></script>
+    <script src="js/ui/modal.js"></script>
+    <script src="js/ui/dashboard.js"></script>
+
+    <script src="js/interactions.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+</body>
+</html>
